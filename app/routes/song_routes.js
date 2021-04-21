@@ -14,7 +14,7 @@ const customErrors = require('../../lib/custom_errors')
 const handle404 = customErrors.handle404
 // we'll use this function to send 401 when a user tries to modify a resource
 // that's owned by someone else
-const requireOwnership = customErrors.requireOwnership
+// const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
 // { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
@@ -87,6 +87,23 @@ router.patch('/songs/:id', requireToken, removeBlanks, (req, res, next) => {
       return song.updateOne(req.body.song)
     })
     // if that succeeded, return 204 and no JSON
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
+
+// DESTROY
+// DELETE /examples/60802c7f15794a4d6f242d2a
+router.delete('/songs/:id', requireToken, (req, res, next) => {
+  // find by req.params.id
+  Song.findById(req.params.id)
+    .then(handle404)
+    .then(song => {
+      // throw error if current user doesn't own `song`
+      // delete the song ONLY if the above didn't throw
+      song.deleteOne()
+    })
+    // send back 204 and no content if deletion succeeded
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(next)
