@@ -43,6 +43,18 @@ router.get('/songs', requireToken, (req, res, next) => {
     .catch(next)
 })
 
+// SHOW
+// GET /songs/60802e771f84da4deb8dea46
+router.get('/songs/:id', requireToken, (req, res, next) => {
+  // req.params.id will be set based on the `:id` in the route
+  Song.findById(req.params.id)
+    .then(handle404)
+    // if `findById` is succesful, respond with 200 and "song" JSON
+    .then(song => res.status(200).json({ song: song.toObject() }))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
+
 // CREATE
 // POST /songs
 // require token auth to create a song
