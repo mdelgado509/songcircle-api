@@ -72,4 +72,24 @@ router.post('/songs', requireToken, (req, res, next) => {
     .catch(next)
 })
 
+// UPDATE
+// PATCH /songs/60802e771f84da4deb8dea46
+router.patch('/songs/:id', requireToken, removeBlanks, (req, res, next) => {
+  // if the client attempts to change the `owner` property by including a new
+  // owner, prevent that by deleting that key/value pair
+  Song.findById(req.params.id)
+    .then(handle404)
+    .then(song => {
+      // pass the `req` object and the Mongoose record to `requireOwnership`
+      // it will throw an error if the current user isn't the owner
+
+      // pass the result of Mongoose's `.update` to the next `.then`
+      return song.updateOne(req.body.song)
+    })
+    // if that succeeded, return 204 and no JSON
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
+
 module.exports = router
