@@ -27,17 +27,30 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
+// INDEX
+// GET /songs
+router.get('/songs', requireToken, (req, res, next) => {
+  Song.find()
+    .then(songs => {
+      // `song` will be an array of Mongoose documents
+      // we want to convert each one to a POJO, so we use `.map` to
+      // apply `.toObject` to each one
+      return songs.map(song => song.toObject())
+    })
+    // respond with status 200 and JSON of the songs
+    .then(songs => res.status(200).json({ songs: songs }))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
+
 // CREATE
 // POST /songs
 // require token auth to create a song
 router.post('/songs', requireToken, (req, res, next) => {
   // create song data with incoming req body
-  console.log(req.body.song)
   Song.create(req.body.song)
     // respond to succesful `create` with status 201 and JSON of new "song"
     .then(song => {
-      console.log(song)
-      console.log(song.toObject())
       res.status(201).json({ song: song.toObject() })
     })
 
