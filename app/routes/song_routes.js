@@ -14,7 +14,7 @@ const customErrors = require('../../lib/custom_errors')
 const handle404 = customErrors.handle404
 // we'll use this function to send 401 when a user tries to modify a resource
 // that's owned by someone else
-// const requireOwnership = customErrors.requireOwnership
+const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
 // { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
@@ -59,6 +59,9 @@ router.get('/songs/:id', requireToken, (req, res, next) => {
 // POST /songs
 // require token auth to create a song
 router.post('/songs', requireToken, (req, res, next) => {
+  // set owner of new song to be current user
+  req.body.song.owner = req.user.id
+
   // create song data with incoming req body
   Song.create(req.body.song)
     // respond to succesful `create` with status 201 and JSON of new "song"
@@ -77,11 +80,14 @@ router.post('/songs', requireToken, (req, res, next) => {
 router.patch('/songs/:id', requireToken, removeBlanks, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
+  delete req.body.song.owner
+
   Song.findById(req.params.id)
     .then(handle404)
     .then(song => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
       // it will throw an error if the current user isn't the owner
+      requireOwnership(req, song)
 
       // pass the result of Mongoose's `.update` to the next `.then`
       return song.updateOne(req.body.song)
@@ -100,6 +106,7 @@ router.delete('/songs/:id', requireToken, (req, res, next) => {
     .then(handle404)
     .then(song => {
       // throw error if current user doesn't own `song`
+      requireOwnership(req, song)
       // delete the song ONLY if the above didn't throw
       song.deleteOne()
     })
