@@ -62,6 +62,9 @@ router.post('/songs', requireToken, (req, res, next) => {
   // set owner of new song to be current user
   req.body.song.owner = req.user.id
 
+  // set owner email of new song to current user email
+  req.body.song.ownerEmail = req.user.email
+
   // create song data with incoming req body
   Song.create(req.body.song)
     // respond to succesful `create` with status 201 and JSON of new "song"

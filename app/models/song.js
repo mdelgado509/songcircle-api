@@ -16,6 +16,11 @@ const songSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  ownerEmail: {
+    type: String,
+    ref: 'User',
+    required: true
   }
 }, { // require timestamps
   timestamps: true
